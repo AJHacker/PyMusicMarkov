@@ -2,11 +2,12 @@ import random
 from xmlParser import Parse
 def Markov(xmlFile):
     data = Parse(xmlFile)
-    start_index = 0
+
 
     final = []
      # create a list of all words
     for voice in data[0]:
+        start_index = 0
         markov = {i:[] for i in voice}    # i create a dict with the words as keys and empty lists as values
 
         pos = 0
@@ -15,7 +16,7 @@ def Markov(xmlFile):
             pos += 1
 
         new = {k:v for k,v in zip(range(len(markov)), [i for i in markov])}    # create another dict for the seed to match up with
-        length_sentence = random.randint(100, 100)    # create a random length for a sentence stopping point
+        length_sentence = random.randint(80, 100)    # create a random length for a sentence stopping point
 
         seed = random.randint(0, len(new) - 1)    # randomly pick a starting point
 
@@ -29,6 +30,7 @@ def Markov(xmlFile):
             current_word = next_word
 
         final.append([i for i in sentence_data])
+    print(len(final))
     return (final,data[1])
 
-print(Markov('mario medley.xml'))
+print(Markov('take5.xml'))
