@@ -1,9 +1,7 @@
-#<attributes>
-    #<divisions> this number is the <duration> for a beat
-#<time>
-    #<beat-type> is the bottom # of the time signature
+# fix ties across bars
+# multi instrument
 
-# todo change <type> to <duration> calculated using above
+
 from xml.dom import minidom
 import string
 
@@ -28,6 +26,12 @@ keys={
 
 }
 
+beatUnits={
+    'quarter':1,
+    'eighth':.5,
+    'half':2,
+}
+
 beatTypes={
     '4':1,
     '8':.5,
@@ -42,51 +46,120 @@ noteTypes={'q':1,'dq':1.5,'h':2,'dh':3,'w':4,'e':.5,'de':.75,'tr':1/3,'t':1/3,
     'dq,e':2,'dh,e':3.5,'dh,dq':4.5,'dq,s':1.75,'dh,q':4,'dq,dq':3,'dq,de':1.5+.75
     }
 
+sharpOrder=[
+    ('a',0),('a#',0),('b',0),
+    ('c', 1), ('c#', 1), ('d', 1), ('d#', 1), ('e', 1), ('f', 1), ('f#', 1), ('g', 1), ('g#', 1), ('a', 1), ('a#', 1), ('b', 1), 
+    ('c', 2), ('c#', 2), ('d', 2), ('d#', 2), ('e', 2), ('f', 2), ('f#', 2), ('g', 2), ('g#', 2), ('a', 2), ('a#', 2), ('b', 2), 
+    ('c', 3), ('c#', 3), ('d', 3), ('d#', 3), ('e', 3), ('f', 3), ('f#', 3), ('g', 3), ('g#', 3), ('a', 3), ('a#', 3), ('b', 3), 
+    ('c', 4), ('c#', 4), ('d', 4), ('d#', 4), ('e', 4), ('f', 4), ('f#', 4), ('g', 4), ('g#', 4), ('a', 4), ('a#', 4), ('b', 4), 
+    ('c', 5), ('c#', 5), ('d', 5), ('d#', 5), ('e', 5), ('f', 5), ('f#', 5), ('g', 5), ('g#', 5), ('a', 5), ('a#', 5), ('b', 5), 
+    ('c', 6), ('c#', 6), ('d', 6), ('d#', 6), ('e', 6), ('f', 6), ('f#', 6), ('g', 6), ('g#', 6), ('a', 6), ('a#', 6), ('b', 6), 
+    ('c', 7), ('c#', 7), ('d', 7), ('d#', 7), ('e', 7), ('f', 7), ('f#', 7), ('g', 7), ('g#', 7), ('a', 7), ('a#', 7), ('b', 7),
+    ('c',8)
+    ]
 
-def Parse(path):
+flatOrder=[
+    ('a',0),('bb',0),('b',0),
+    ('c', 1), ('db', 1), ('d', 1), ('eb', 1), ('e', 1), ('f', 1), ('gb', 1), ('g', 1), ('ab', 1), ('a', 1), ('bb', 1), ('b', 1), 
+    ('c', 2), ('db', 2), ('d', 2), ('eb', 2), ('e', 2), ('f', 2), ('gb', 2), ('g', 2), ('ab', 2), ('a', 2), ('bb', 2), ('b', 2), 
+    ('c', 3), ('db', 3), ('d', 3), ('eb', 3), ('e', 3), ('f', 3), ('gb', 3), ('g', 3), ('ab', 3), ('a', 3), ('bb', 3), ('b', 3), 
+    ('c', 4), ('db', 4), ('d', 4), ('eb', 4), ('e', 4), ('f', 4), ('gb', 4), ('g', 4), ('ab', 4), ('a', 4), ('bb', 4), ('b', 4), 
+    ('c', 5), ('db', 5), ('d', 5), ('eb', 5), ('e', 5), ('f', 5), ('gb', 5), ('g', 5), ('ab', 5), ('a', 5), ('bb', 5), ('b', 5), 
+    ('c', 6), ('db', 6), ('d', 6), ('eb', 6), ('e', 6), ('f', 6), ('gb', 6), ('g', 6), ('ab', 6), ('a', 6), ('bb', 6), ('b', 6), 
+    ('c', 7), ('db', 7), ('d', 7), ('eb', 7), ('e', 7), ('f', 7), ('gb', 7), ('g', 7), ('ab', 7), ('a', 7), ('bb', 7), ('b', 7),
+    ('c',8)
+    ]
+
+
+def Parse(path,inTempo=None,tiesOn=True,skipPercussion=False):
     xmldoc = minidom.parse(path)
+    try:
+        tempo=int(xmldoc.getElementsByTagName('sound')[0].getAttribute('tempo'))
+    except:
+        print('no tempo found')
+        tempo=inTempo if inTempo!=None else 120#int(input('What is the tempo of the piece?'))
+    completeSong={}
+    for part in xmldoc.getElementsByTagName('part'):
+        if skipPercussion and part.getElementsByTagName('unpitched')!=[]:continue
+        instrument=part.getAttribute('id')
+        completeSong[instrument]=parseInstrument(part,tiesOn)
+    result=[]
+    for part in completeSong:
+        for voice in completeSong[part]:
+            result.append(voice)
+    #print(result)
+    return (result,tempo)
 
-    measures=xmldoc.getElementsByTagName('measure')
-    key0=xmldoc.getElementsByTagName('fifths')[0].childNodes[0].nodeValue
+def parseInstrument(part,tiesOn):
+    partID=part.getAttribute('id')
+    print(partID)
+    try:
+        transpose=int(part.getElementsByTagName('chromatic')[0].childNodes[0].nodeValue)
+        #print(transpose)
+    except:
+        transpose=0
+    measures=part.getElementsByTagName('measure')
+    key0=part.getElementsByTagName('fifths')[0].childNodes[0].nodeValue
     key=key0
-    divisions=int(xmldoc.getElementsByTagName('divisions')[0].childNodes[0].nodeValue)
-    noOfBeats=int(xmldoc.getElementsByTagName('beats')[0].childNodes[0].nodeValue)
-    beatType=beatTypes[xmldoc.getElementsByTagName('beat-type')[0].childNodes[0].nodeValue]
-    awhetsgafgn=xmldoc.getElementsByTagName('voice')
-    allVoices=set([awhetsgafgn[i].childNodes[0].nodeValue
-         for i in range(len(awhetsgafgn))])
-
+    divisions=int(part.getElementsByTagName('divisions')[0].childNodes[0].nodeValue)
+    try:noOfBeats=int(part.getElementsByTagName('beats')[0].childNodes[0].nodeValue)
+    except:noOfBeats=4
+    try:beatType=beatTypes[part.getElementsByTagName('beat-type')[0].childNodes[0].nodeValue]
+    except:beatType=4
+    try:beatUnit=beatUnits[part.getElementsByTagName('beat-unit')[0].childNodes[0].nodeValue]
+    except:beatUnit=1
+    aV=part.getElementsByTagName('voice')
+    allVoices=set([aV[i].childNodes[0].nodeValue
+         for i in range(len(aV))])
+    ties=dict()
     song={}
-    last=''
     repeatStart=(0,False) # measure no and whether repeated once or not
     i=0
     while i <len(measures):
+
         measure=measures[i]
 
-        if measure.getElementsByTagName('sound')!=[] and measure.getElementsByTagName('sound')[0].hasAttribute('tempo'):
-            newTempo=measure.getElementsByTagName('sound')[0].getAttribute('tempo')
-            for voice in song:
-                song[voice].append(int(newTempo))
+        if measure.getElementsByTagName('beats')!=[]:
+            noOfBeats=int(measure.getElementsByTagName('beats')[0].childNodes[0].nodeValue)
+        if measure.getElementsByTagName('beat-type')!=[]:
+            beatType=beatTypes[measure.getElementsByTagName('beat-type')[0].childNodes[0].nodeValue]
+        if measure.getElementsByTagName('beat-unit')!=[]:
+            beatUnit=beatUnits[measure.getElementsByTagName('beat-unit')[0].childNodes[0].nodeValue]
+        if (measure.getElementsByTagName('sound')!=[] and 
+                (measure.getElementsByTagName('words')==[])):
+            sound=measure.getElementsByTagName('sound')
+            for k in range(len(sound)):
+                if sound[k].hasAttribute("tempo"):
+                    newTempo=sound[k].getAttribute('tempo')
+                    for voice in song:
+                        song[voice].append(int(float(newTempo)))
+                    break
+        if measure.getElementsByTagName('fifths')!=[]:
+            key=measure.getElementsByTagName('fifths')[0].childNodes[0].nodeValue
 
         notes=measure.getElementsByTagName('note')
         sharps=[]
         flats=[]
         naturals=[]
         for note in notes:
+            flag=False
             # ignore grace notes
-            if note.getElementsByTagName('grace')!=[]: continue
-            # for notes
-            if note.getElementsByTagName('step')!=[]:
-                pitch= note.getElementsByTagName('step')[0].childNodes[0].nodeValue.lower()
-                octave = note.getElementsByTagName('octave')[0].childNodes[0].nodeValue
+            if (note.getElementsByTagName('grace')!=[]):
+                continue
 
-            else:
             # for rests
+            if note.getElementsByTagName('rest')!=[]:
                 pitch='r'
                 octave='4'
+
+            # for notes
+            elif note.getElementsByTagName('step')!=[]:
+                pitch= note.getElementsByTagName('step')[0].childNodes[0].nodeValue.lower()
+                octave = note.getElementsByTagName('octave')[0].childNodes[0].nodeValue
+               
             try:
                 duration=note.getElementsByTagName('duration')[0].childNodes[0].nodeValue
-                temp=(int(duration)/divisions)*beatType
+                temp=(int(duration)/divisions)*beatUnit
             except:
                 types = note.getElementsByTagName('type')
                 temp = types[0].childNodes[0].nodeValue
@@ -99,13 +172,7 @@ def Parse(path):
                 else:print(temp)
                 if temp in noteTypes:
                     temp=noteTypes[temp]
-                temp*=beatType
-
-            # may not be necessary
-            # if note.getElementsByTagName("time-modification")!=[]:
-            #     normal=note.getElementsByTagName('normal-notes')[0].childNodes[0].nodeValue
-            #     actual=note.getElementsByTagName('actual-notes')[0].childNodes[0].nodeValue
-            #     temp*=(int(normal)/int(actual))
+                temp*=beatUnit
 
             # Accidentals
             try:
@@ -114,51 +181,65 @@ def Parse(path):
                     pitch+='#'
                 elif alter=='-1':
                     pitch+='b'
+                elif alter=='-2':
+                    pitch=flatOrder[flatOrder.index((pitch,4))-2][0]
+                elif alter=='2':
+                    pitch=sharpOrder[sharpOrder.index((pitch,4))+2][0]
+            except: pass
 
-            except:
-                if note.getElementsByTagName('accidental')!=[]:
-                    accidental=note.getElementsByTagName('accidental')[0].childNodes[0].nodeValue
-                    if accidental=='sharp':
-                        pitch+='#'
-                        sharps.append(pitch[0])
-                        flats.remove(pitch[0]) if pitch[0] in flats else None
-                        naturals.remove(pitch[0]) if pitch[0] in naturals else None
-                    elif accidental=='flat':
-                        pitch+='b'
-                        flats.append(pitch[0])
-                        sharps.remove(pitch[0]) if pitch[0] in sharps else None
-                        naturals.remove(pitch[0]) if pitch[0] in naturals else None
-                    elif accidental=='natural':
-                        pitch=pitch[0]
-                        naturals.append(pitch[0])
-                        flats.remove(pitch[0]) if pitch[0] in flats else None
-                        sharps.remove(pitch[0]) if pitch[0] in sharps else None
+            if pitch=='b#':
+                pitch='c'
+                octave=str(int(octave)+1)
+            elif pitch=='cb':
+                pitch='b'
+                octave=str(int(octave)-1)
+            elif pitch=='e#':
+                pitch='f'
+            elif pitch=='fb':
+                pitch='e'
+            # Transposing
+            if pitch!='p' and pitch!='r':
+                if pitch[-1]=='#':
+                    index=sharpOrder[sharpOrder.index((pitch,int(octave)))+transpose]
+                    pitch=index[0]
+                    octave=str(index[1])
                 else:
-                # adds accidental if one was earlier in the measure
-                    if pitch in sharps: pitch+='#'
-                    elif pitch in flats: pitch+='b'
-                    elif pitch in naturals: pitch=pitch[0]
-                    # applies key signature
-                    else:
-                        if pitch in keys[key]:
-                            if int(key)>0:
-                                pitch+='#'
-                            elif int(key)<0:
-                                pitch+='b'
+                    index=flatOrder[flatOrder.index((pitch,int(octave)))+transpose]
+                    pitch=index[0]
+                    octave=str(index[1])
 
-            # final formatting
-            string = "%s %s %s" % (pitch,octave,temp)
-            # skip tie starts
-            if note.getElementsByTagName('tie')!=[]:
-                tie=note.getElementsByTagName('tie')[0].getAttribute('type')
-                if tie=='start':
-                    last=string
-                    continue
-                elif tie=='stop':
-                    # concatenate tied notes on stop
-                    string=connectTied(last,string)
+            # for percussion
+            if (note.getElementsByTagName('unpitched')!=[] or
+                note.getElementsByTagName('notehead')!=[]):
+                pitch='p'
+                octave='1'
 
             voice=note.getElementsByTagName('voice')[0].childNodes[0].nodeValue
+            # final formatting
+            string = "%s %s %s" % (pitch,octave,temp)
+
+            # skip tie starts
+            if tiesOn and note.getElementsByTagName('tie')!=[]:
+                tieList=note.getElementsByTagName('tie')
+                for n in range(len(tieList)):
+                    tie=tieList[n].getAttribute('type')
+                    #print(i)
+                    if tie=='start':
+                        s=string.split()
+                        tPitch=s[0]
+                        tOctave=s[1]
+                        tTemp=float(s[-1])
+                        ties[(tPitch,tOctave)]=tTemp
+                        #print('start',voice,string)
+                        flag=True
+                    elif tie=='stop':
+                        #print(ties)
+                        # concatenate tied notes on stop
+                        string=connectTied(ties,(pitch,octave),temp,voice)
+                        #print('stop',voice,string)
+            if flag: #skips start of ties
+                continue
+
             voiceList=song.get(voice,[])
             # put chords in tuples
             if note.getElementsByTagName('chord')==[]:
@@ -186,32 +267,54 @@ def Parse(path):
             voices=measure.getElementsByTagName('voice')
             if voice not in [voices[i].childNodes[0].nodeValue for i in range(len(voices))]:
                 a=song.get(voice,[])
-                a.append('r 4 %d'%noOfBeats*beatType)
+                b=noOfBeats*beatType
+                a.append('r 4 %d' % b)
                 song[voice]=a
     final=[]
     for voice in song:
         final.append(song[voice])
-    tempo=int(xmldoc.getElementsByTagName('per-minute')[0].childNodes[0].nodeValue)
-    return (final,tempo)
+
+    return final
 
 
 # concatenates noteType of two tied notes
-def connectTied(l,s):
-    L=l.split()
-    S=s.split()
-    value=float(L[-1])+float(S[-1])
-    return str(S[0])+' '+str(S[1])+' '+str(value)
+def connectTied(ties,note,time,voice):
+    #print(voice,note,time)
+    (pitch,octave)=note
+    try:
+        if (pitch+'b',octave) in ties:
+            note=(pitch+'b',octave)
+        elif (pitch+'#',octave) in ties:
+            note=(pitch+'#',octave)
+        elif (pitch[0],octave) in ties:
+            note=(pitch[0],octave)
+    except:
+        for tie in ties:
+            if (pitch+'b',octave)==tie:
+                note=(pitch+'b',octave)
+            elif (pitch+'#',octave)==tie:
+                note=(pitch+'#',octave)
+            elif (pitch[0],octave)==tie:
+                note=(pitch[0],octave)
+    try:
+        time0=ties[note]
+        del ties[note]
+        newTime=time0+time
+    except:
+        print('failed to find tie start')
+        newTime=time
+    return note[0]+' '+note[1]+' '+str(newTime)
 
-def testLengths(filename):
-    file,tempo=Parse(filename)
+def testLengths(filename,inTempo=None,tiesOn=True):
+    file,tempo=Parse(filename,inTempo=inTempo,tiesOn=tiesOn)
     lengths=[]
     for voice in file:
         voiceLength=0
         for chord in voice:
             if isinstance(chord,str):
-                voiceLength+=float(chord.split()[-1])
+                voiceLength+=float(chord.split()[2])
             elif isinstance(chord,tuple):
-                voiceLength+=float(chord[0].split()[-1])
+                voiceLength+=float(chord[0].split()[2])
         lengths.append(voiceLength*44100*60/tempo)
     print(lengths)
     mx=max(lengths)
@@ -219,6 +322,3 @@ def testLengths(filename):
     diff=str((mx-mn)/mx*100)+'% difference'
     print(diff)
 
-#testLengths('mario medley.xml')
-
-#print(Parse('mario medley.xml'))
