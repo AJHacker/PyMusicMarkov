@@ -1,5 +1,7 @@
-# fix ties across bars
-# multi instrument
+##Algorithmic Help and Muic Theory Help and Code Help Credited to
+##David Yang-dzy
+##
+##
 
 
 from xml.dom import minidom
@@ -48,29 +50,32 @@ noteTypes={'q':1,'dq':1.5,'h':2,'dh':3,'w':4,'e':.5,'de':.75,'tr':1/3,'t':1/3,
 
 sharpOrder=[
     ('a',0),('a#',0),('b',0),
-    ('c', 1), ('c#', 1), ('d', 1), ('d#', 1), ('e', 1), ('f', 1), ('f#', 1), ('g', 1), ('g#', 1), ('a', 1), ('a#', 1), ('b', 1), 
-    ('c', 2), ('c#', 2), ('d', 2), ('d#', 2), ('e', 2), ('f', 2), ('f#', 2), ('g', 2), ('g#', 2), ('a', 2), ('a#', 2), ('b', 2), 
-    ('c', 3), ('c#', 3), ('d', 3), ('d#', 3), ('e', 3), ('f', 3), ('f#', 3), ('g', 3), ('g#', 3), ('a', 3), ('a#', 3), ('b', 3), 
-    ('c', 4), ('c#', 4), ('d', 4), ('d#', 4), ('e', 4), ('f', 4), ('f#', 4), ('g', 4), ('g#', 4), ('a', 4), ('a#', 4), ('b', 4), 
-    ('c', 5), ('c#', 5), ('d', 5), ('d#', 5), ('e', 5), ('f', 5), ('f#', 5), ('g', 5), ('g#', 5), ('a', 5), ('a#', 5), ('b', 5), 
-    ('c', 6), ('c#', 6), ('d', 6), ('d#', 6), ('e', 6), ('f', 6), ('f#', 6), ('g', 6), ('g#', 6), ('a', 6), ('a#', 6), ('b', 6), 
+    ('c', 1), ('c#', 1), ('d', 1), ('d#', 1), ('e', 1), ('f', 1), ('f#', 1), ('g', 1), ('g#', 1), ('a', 1), ('a#', 1), ('b', 1),
+    ('c', 2), ('c#', 2), ('d', 2), ('d#', 2), ('e', 2), ('f', 2), ('f#', 2), ('g', 2), ('g#', 2), ('a', 2), ('a#', 2), ('b', 2),
+    ('c', 3), ('c#', 3), ('d', 3), ('d#', 3), ('e', 3), ('f', 3), ('f#', 3), ('g', 3), ('g#', 3), ('a', 3), ('a#', 3), ('b', 3),
+    ('c', 4), ('c#', 4), ('d', 4), ('d#', 4), ('e', 4), ('f', 4), ('f#', 4), ('g', 4), ('g#', 4), ('a', 4), ('a#', 4), ('b', 4),
+    ('c', 5), ('c#', 5), ('d', 5), ('d#', 5), ('e', 5), ('f', 5), ('f#', 5), ('g', 5), ('g#', 5), ('a', 5), ('a#', 5), ('b', 5),
+    ('c', 6), ('c#', 6), ('d', 6), ('d#', 6), ('e', 6), ('f', 6), ('f#', 6), ('g', 6), ('g#', 6), ('a', 6), ('a#', 6), ('b', 6),
     ('c', 7), ('c#', 7), ('d', 7), ('d#', 7), ('e', 7), ('f', 7), ('f#', 7), ('g', 7), ('g#', 7), ('a', 7), ('a#', 7), ('b', 7),
     ('c',8)
     ]
 
 flatOrder=[
     ('a',0),('bb',0),('b',0),
-    ('c', 1), ('db', 1), ('d', 1), ('eb', 1), ('e', 1), ('f', 1), ('gb', 1), ('g', 1), ('ab', 1), ('a', 1), ('bb', 1), ('b', 1), 
-    ('c', 2), ('db', 2), ('d', 2), ('eb', 2), ('e', 2), ('f', 2), ('gb', 2), ('g', 2), ('ab', 2), ('a', 2), ('bb', 2), ('b', 2), 
-    ('c', 3), ('db', 3), ('d', 3), ('eb', 3), ('e', 3), ('f', 3), ('gb', 3), ('g', 3), ('ab', 3), ('a', 3), ('bb', 3), ('b', 3), 
-    ('c', 4), ('db', 4), ('d', 4), ('eb', 4), ('e', 4), ('f', 4), ('gb', 4), ('g', 4), ('ab', 4), ('a', 4), ('bb', 4), ('b', 4), 
-    ('c', 5), ('db', 5), ('d', 5), ('eb', 5), ('e', 5), ('f', 5), ('gb', 5), ('g', 5), ('ab', 5), ('a', 5), ('bb', 5), ('b', 5), 
-    ('c', 6), ('db', 6), ('d', 6), ('eb', 6), ('e', 6), ('f', 6), ('gb', 6), ('g', 6), ('ab', 6), ('a', 6), ('bb', 6), ('b', 6), 
+    ('c', 1), ('db', 1), ('d', 1), ('eb', 1), ('e', 1), ('f', 1), ('gb', 1), ('g', 1), ('ab', 1), ('a', 1), ('bb', 1), ('b', 1),
+    ('c', 2), ('db', 2), ('d', 2), ('eb', 2), ('e', 2), ('f', 2), ('gb', 2), ('g', 2), ('ab', 2), ('a', 2), ('bb', 2), ('b', 2),
+    ('c', 3), ('db', 3), ('d', 3), ('eb', 3), ('e', 3), ('f', 3), ('gb', 3), ('g', 3), ('ab', 3), ('a', 3), ('bb', 3), ('b', 3),
+    ('c', 4), ('db', 4), ('d', 4), ('eb', 4), ('e', 4), ('f', 4), ('gb', 4), ('g', 4), ('ab', 4), ('a', 4), ('bb', 4), ('b', 4),
+    ('c', 5), ('db', 5), ('d', 5), ('eb', 5), ('e', 5), ('f', 5), ('gb', 5), ('g', 5), ('ab', 5), ('a', 5), ('bb', 5), ('b', 5),
+    ('c', 6), ('db', 6), ('d', 6), ('eb', 6), ('e', 6), ('f', 6), ('gb', 6), ('g', 6), ('ab', 6), ('a', 6), ('bb', 6), ('b', 6),
     ('c', 7), ('db', 7), ('d', 7), ('eb', 7), ('e', 7), ('f', 7), ('gb', 7), ('g', 7), ('ab', 7), ('a', 7), ('bb', 7), ('b', 7),
     ('c',8)
     ]
 
-
+#######
+# XML PARSE FUNCTION WRITTEN BY DAVID YANG
+#
+#######
 def Parse(path,inTempo=None,tiesOn=True,skipPercussion=False):
     xmldoc = minidom.parse(path)
     try:
@@ -125,7 +130,7 @@ def parseInstrument(part,tiesOn):
             beatType=beatTypes[measure.getElementsByTagName('beat-type')[0].childNodes[0].nodeValue]
         if measure.getElementsByTagName('beat-unit')!=[]:
             beatUnit=beatUnits[measure.getElementsByTagName('beat-unit')[0].childNodes[0].nodeValue]
-        if (measure.getElementsByTagName('sound')!=[] and 
+        if (measure.getElementsByTagName('sound')!=[] and
                 (measure.getElementsByTagName('words')==[])):
             sound=measure.getElementsByTagName('sound')
             for k in range(len(sound)):
@@ -156,7 +161,7 @@ def parseInstrument(part,tiesOn):
             elif note.getElementsByTagName('step')!=[]:
                 pitch= note.getElementsByTagName('step')[0].childNodes[0].nodeValue.lower()
                 octave = note.getElementsByTagName('octave')[0].childNodes[0].nodeValue
-               
+
             try:
                 duration=note.getElementsByTagName('duration')[0].childNodes[0].nodeValue
                 temp=(int(duration)/divisions)*beatUnit
@@ -321,4 +326,3 @@ def testLengths(filename,inTempo=None,tiesOn=True):
     mn=min(lengths)
     diff=str((mx-mn)/mx*100)+'% difference'
     print(diff)
-
